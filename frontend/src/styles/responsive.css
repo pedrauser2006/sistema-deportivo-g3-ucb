@@ -1,0 +1,53 @@
+/* =========================
+   GLOBAL RESPONSIVE
+========================= */
+
+@media screen and (max-width: 768px) {
+  /* CONTENIDO */
+  .page-content {
+    padding: 16px !important;
+  }
+
+  /* TITULOS */
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  /* FORMULARIOS */
+  form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+  }
+
+  form input,
+  form button,
+  form select {
+    width: 100%;
+  }
+
+  /* TABLAS */
+  .table-container {
+    overflow-x: auto;
+
+    border-radius: 16px;
+  }
+
+  table {
+    min-width: 700px;
+  }
+
+  /* CARDS */
+  .card {
+    padding: 18px;
+  }
+}

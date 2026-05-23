@@ -1,0 +1,206 @@
+.reservas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HEADER */
+.page-description {
+  color: var(--text-light);
+  margin-top: -10px;
+}
+
+/* FORM CARD */
+.form-card {
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 24px;
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* FORM */
+.reservas-form {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+  gap: 16px;
+
+  align-items: end;
+}
+
+/* TABLA */
+.table-card {
+  background: white;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* ESTADO */
+.status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status.active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+/* BOTON CANCELAR */
+.btn-cancel {
+  background: rgba(239, 68, 68, 0.1);
+
+  color: #dc2626;
+
+  padding: 8px 14px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #dc2626;
+  color: white;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 450px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 24px;
+
+  box-shadow: var(--shadow-md);
+
+  animation: modalShow 0.2s ease;
+}
+
+body.dark .modal-content {
+  background: #1e293b;
+
+  color: white;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 24px;
+}
+
+.modal-header h3 {
+  color: var(--ucb-blue);
+}
+
+.modal-close {
+  background: transparent;
+
+  font-size: 22px;
+
+  color: var(--text-light);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   EXPORT BUTTONS
+========================= */
+
+.page-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  background: var(--ucb-blue);
+
+  color: white;
+
+  padding: 12px 18px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  transition: 0.2s ease;
+}
+
+.btn-export:hover {
+  background: var(--ucb-blue-light);
+
+  transform: translateY(-1px);
+}
+
+.btn-export.pdf {
+  background: #dc2626;
+}
+
+.btn-export.pdf:hover {
+  background: #b91c1c;
+}

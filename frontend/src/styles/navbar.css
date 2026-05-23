@@ -1,0 +1,190 @@
+.navbar {
+  height: 90px;
+
+  background: var(--card-bg);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 30px;
+
+  border-bottom: 1px solid var(--border-color);
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* TITULOS */
+.navbar-title {
+  font-size: 28px;
+  color: var(--ucb-blue);
+  font-weight: 700;
+}
+
+.navbar-subtitle {
+  font-size: 14px;
+  color: var(--text-light);
+
+  margin-top: 4px;
+}
+
+/* DERECHA */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* FECHA */
+.navbar-date {
+  font-size: 14px;
+  color: var(--text-light);
+
+  text-transform: capitalize;
+}
+
+/* CAMPANA */
+.notification-btn {
+  width: 44px;
+  height: 44px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+
+  color: var(--ucb-blue);
+}
+
+.notification-btn:hover {
+  background: var(--ucb-blue);
+  color: white;
+}
+
+/* USUARIO */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  padding: 10px 14px;
+
+  border-radius: 14px;
+}
+
+.navbar-user svg {
+  font-size: 32px;
+  color: var(--ucb-blue);
+}
+
+.navbar-user strong {
+  font-size: 14px;
+}
+
+.navbar-user p {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* DARK MODE BUTTON */
+.theme-btn {
+  width: 44px;
+  height: 44px;
+
+  border-radius: 12px;
+
+  background: var(--bg-color);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+
+  color: var(--ucb-blue);
+
+  transition: 0.2s ease;
+}
+
+.theme-btn:hover {
+  background: var(--ucb-blue);
+  color: white;
+}
+
+body.dark .navbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.dark .navbar-title {
+  color: #f8fafc;
+}
+
+body.dark .navbar-subtitle,
+body.dark .navbar-date,
+body.dark .navbar-user p {
+  color: #cbd5e1;
+}
+
+body.dark .navbar-user strong {
+  color: white;
+}
+
+/* =========================
+   RESPONSIVE NAVBAR
+========================= */
+
+@media screen and (max-width: 768px) {
+  .navbar {
+    height: auto;
+
+    padding: 14px 16px;
+    padding-left: 70px;
+
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .navbar-title {
+    font-size: 20px;
+  }
+
+  .navbar-subtitle {
+    font-size: 11px;
+  }
+
+  .navbar-right {
+    gap: 10px;
+  }
+
+  .navbar-date {
+    display: none;
+  }
+
+  .notification-btn {
+    width: 38px;
+    height: 38px;
+
+    font-size: 16px;
+  }
+
+  .navbar-user {
+    padding: 8px 10px;
+  }
+
+  .navbar-user strong,
+  .navbar-user p {
+    display: none;
+  }
+
+  .navbar-user svg {
+    font-size: 26px;
+  }
+}

@@ -1,0 +1,190 @@
+.deportistas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HEADER */
+.page-description {
+  color: var(--text-light);
+  margin-top: -10px;
+}
+
+/* FORM */
+.deportistas-form {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+  gap: 16px;
+
+  align-items: end;
+}
+
+/* TABLA */
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* BOTON EDITAR */
+.btn-edit {
+  background: rgba(59, 130, 246, 0.1);
+
+  color: #2563eb;
+
+  padding: 8px 14px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* BOTON ELIMINAR */
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+
+  color: #dc2626;
+
+  padding: 8px 14px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+  color: white;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 450px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 24px;
+
+  box-shadow: var(--shadow-md);
+
+  animation: modalShow 0.2s ease;
+}
+
+body.dark .modal-content {
+  background: #1e293b;
+
+  color: white;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 24px;
+}
+
+.modal-header h3 {
+  color: var(--ucb-blue);
+}
+
+.modal-close {
+  background: transparent;
+
+  font-size: 22px;
+
+  color: var(--text-light);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   EXPORT BUTTONS
+========================= */
+
+.page-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-export {
+  background: var(--ucb-blue);
+
+  color: white;
+
+  padding: 12px 18px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  transition: 0.2s ease;
+}
+
+.btn-export:hover {
+  background: var(--ucb-blue-light);
+
+  transform: translateY(-1px);
+}
+
+.btn-export.pdf {
+  background: #dc2626;
+}
+
+.btn-export.pdf:hover {
+  background: #b91c1c;
+}
