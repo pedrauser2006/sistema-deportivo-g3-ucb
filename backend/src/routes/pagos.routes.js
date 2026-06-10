@@ -1,13 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  crearPago,
-  listarPagos,
-  pagosPorDeportista,
-  confirmarPago,
-  obtenerMorosos,
-} = require("../controllers/pagos.controller");
+const { crearPago, listarPagos } = require("../controllers/pagos.controller");
 
 const { verificarToken } = require("../middlewares/auth.middleware");
 const { verificarRol } = require("../middlewares/role.middleware");
@@ -19,81 +13,57 @@ const { verificarRol } = require("../middlewares/role.middleware");
  *   get:
  *     summary: Listar pagos
  *     tags: [Pagos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: deportista_id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Filtro usado por administrador
  *     responses:
  *       200:
  *         description: Lista de pagos
+ *       401:
+ *         description: Token requerido
+ *       403:
+ *         description: No autorizado
  */
-router.get("/", listarPagos);
+router.get(
+  "/",
+  verificarToken,
+  verificarRol("administrador", "estudiante"),
+  listarPagos,
+);
 
 // 🔹 Crear pago
 /**
  * @swagger
  * /pagos:
  *   post:
- *     summary: Registrar pago
+ *     summary: Registrar pago (solo estudiantes)
  *     tags: [Pagos]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           example:
- *             deportista_id: 1
- *             monto: 100
+ *             concepto_id: 1
+ *             mes: 6
+ *             anio: 2026
+ *             origen: "web"
+ *             observaciones: "Pago realizado mediante QR"
  *     responses:
  *       200:
- *         description: Pago registrado
+ *         description: Pago registrado correctamente
+ *       401:
+ *         description: Token requerido
+ *       403:
+ *         description: Usuario no autorizado o no registrado como deportista
  */
-router.post("/", crearPago);
-
-// 🔹 Listar morosos
-/**
- * @swagger
- * /pagos/morosos:
- *   get:
- *     summary: Listar deportistas morosos
- *     tags: [Pagos]
- *     responses:
- *       200:
- *         description: Lista de deportistas sin pagos
- */
-router.get("/morosos", obtenerMorosos);
-
-// 🔹 Pagos por deportista
-/**
- * @swagger
- * /pagos/deportista/{id}:
- *   get:
- *     summary: Ver pagos de un deportista
- *     tags: [Pagos]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Lista de pagos del deportista
- */
-router.get("/deportista/:id", pagosPorDeportista);
-
-// 🔹 Confirmar pago
-/**
- * @swagger
- * /pagos/{id}/confirmar:
- *   put:
- *     summary: Confirmar pago manualmente
- *     tags: [Pagos]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Pago confirmado
- */
-router.put("/:id/confirmar", confirmarPago);
+router.post("/", verificarToken, verificarRol("estudiante"), crearPago);
 
 module.exports = router;

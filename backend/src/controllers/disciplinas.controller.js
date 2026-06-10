@@ -1,13 +1,27 @@
 const pool = require("../config/db");
 
-// 🔹 Crear disciplina
+// Crear disciplina
 const crearDisciplina = async (req, res) => {
   try {
-    const { nombre } = req.body;
+    const { nombre, descripcion, orden } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({
+        error: "El nombre es obligatorio",
+      });
+    }
 
     const result = await pool.query(
-      "INSERT INTO disciplinas (nombre) VALUES ($1) RETURNING *",
-      [nombre],
+      `
+      INSERT INTO disciplinas (
+        nombre,
+        descripcion,
+        orden
+      )
+      VALUES ($1, $2, $3)
+      RETURNING *
+      `,
+      [nombre, descripcion || null, orden || 0],
     );
 
     res.json(result.rows[0]);
@@ -24,25 +38,69 @@ const crearDisciplina = async (req, res) => {
   }
 };
 
-// 🔹 Listar disciplinas
+// Listar disciplinas
 const listarDisciplinas = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM disciplinas");
+    const { activo } = req.query;
+
+    let query = `
+      SELECT *
+      FROM disciplinas
+    `;
+
+    const condiciones = [];
+
+    if (activo === "true") {
+      condiciones.push("activo = TRUE");
+    }
+
+    if (activo === "false") {
+      condiciones.push("activo = FALSE");
+    }
+
+    if (condiciones.length > 0) {
+      query += ` WHERE ` + condiciones.join(" AND ");
+    }
+
+    query += `
+      ORDER BY orden ASC, nombre ASC
+    `;
+
+    const result = await pool.query(query);
+
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: "Error al listar disciplinas" });
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al listar disciplinas",
+    });
   }
 };
 
-// 🔹 Editar disciplina
+// Editar disciplina
 const editarDisciplina = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre } = req.body;
+    const { nombre, descripcion, orden } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({
+        error: "El nombre es obligatorio",
+      });
+    }
 
     const result = await pool.query(
-      "UPDATE disciplinas SET nombre = $1 WHERE id = $2 RETURNING *",
-      [nombre, id],
+      `
+      UPDATE disciplinas
+      SET
+        nombre = $1,
+        descripcion = $2,
+        orden = $3
+      WHERE id = $4
+      RETURNING *
+      `,
+      [nombre, descripcion || null, orden || 0, id],
     );
 
     if (result.rows.length === 0) {
@@ -63,13 +121,18 @@ const editarDisciplina = async (req, res) => {
   }
 };
 
-// 🔹 Eliminar disciplina
+// Eliminar disciplina
 const eliminarDisciplina = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      "DELETE FROM disciplinas WHERE id = $1 RETURNING *",
+      `
+      UPDATE disciplinas
+      SET activo = FALSE
+      WHERE id = $1
+      RETURNING *
+      `,
       [id],
     );
 
@@ -77,9 +140,48 @@ const eliminarDisciplina = async (req, res) => {
       return res.status(404).json({ error: "Disciplina no encontrada" });
     }
 
-    res.json({ mensaje: "Disciplina eliminada" });
+    res.json({
+      mensaje: "Disciplina desactivada correctamente",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar disciplina" });
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al desactivar disciplina",
+    });
+  }
+};
+
+// Reactivar Disciplina
+const reactivarDisciplina = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE disciplinas
+      SET activo = TRUE
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Disciplina no encontrada",
+      });
+    }
+
+    res.json({
+      mensaje: "Disciplina reactivada correctamente",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al reactivar disciplina",
+    });
   }
 };
 
@@ -88,4 +190,5 @@ module.exports = {
   listarDisciplinas,
   editarDisciplina,
   eliminarDisciplina,
+  reactivarDisciplina,
 };

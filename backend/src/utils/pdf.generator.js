@@ -100,6 +100,108 @@ const generarPDFReserva = (reserva) => {
   });
 };
 
+const generarPDFPago = (pago) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const nombreArchivo = `pago_${pago.id}.pdf`;
+
+      const rutaPDF = path.join(__dirname, "../pdfs", nombreArchivo);
+
+      const doc = new PDFDocument({
+        margin: 50,
+      });
+
+      const stream = fs.createWriteStream(rutaPDF);
+
+      doc.pipe(stream);
+
+      const azul = "#003b70";
+      const verde = "#16a34a";
+
+      // Header
+      doc.rect(0, 0, doc.page.width, 80).fill(azul);
+
+      doc
+        .fillColor("white")
+        .fontSize(22)
+        .text("UNIVERSIDAD CATÓLICA BOLIVIANA", 50, 25, {
+          align: "center",
+        });
+
+      // Título
+      doc
+        .moveDown(3)
+        .fillColor("black")
+        .fontSize(18)
+        .text("COMPROBANTE DE PAGO", {
+          align: "center",
+        });
+
+      doc.moveDown(2);
+
+      // Caja
+      doc
+        .roundedRect(70, 180, 450, 220, 10)
+        .lineWidth(2)
+        .strokeColor(verde)
+        .stroke();
+
+      let y = 210;
+
+      doc.fontSize(13).fillColor("black");
+
+      doc.text(`Código de Pago: ${pago.id}`, 100, y);
+      y += 30;
+
+      doc.text(`Deportista: ${pago.deportista_nombre}`, 100, y);
+      y += 30;
+
+      doc.text(`Concepto: ${pago.concepto_nombre}`, 100, y);
+      y += 30;
+
+      doc.text(`Monto: Bs ${pago.monto}`, 100, y);
+      y += 30;
+
+      doc.text(`Mes: ${pago.mes}`, 100, y);
+      y += 30;
+
+      doc.text(`Año: ${pago.anio}`, 100, y);
+      y += 30;
+
+      doc.text(
+        `Fecha de Pago: ${new Date(pago.fecha_pago).toLocaleDateString()}`,
+        100,
+        y,
+      );
+
+      // Footer
+      doc
+        .fontSize(11)
+        .fillColor("gray")
+        .text(
+          "Sistema Deportivo UCB - Documento generado automáticamente",
+          50,
+          700,
+          {
+            align: "center",
+          },
+        );
+
+      doc.end();
+
+      stream.on("finish", () => {
+        resolve(nombreArchivo);
+      });
+
+      stream.on("error", (error) => {
+        reject(error);
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // 🔹 Generador PDF Reportes
 const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
   return new Promise((resolve, reject) => {
@@ -213,5 +315,6 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
 
 module.exports = {
   generarPDFReserva,
+  generarPDFPago,
   generarPDFReporte,
 };

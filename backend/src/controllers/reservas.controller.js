@@ -3,21 +3,45 @@ const path = require("path");
 const transporter = require("../utils/mailer");
 const { generarPDFReserva } = require("../utils/pdf.generator");
 
-// 🔹 Crear reserva
+// Crear reserva
 const crearReserva = async (req, res) => {
   try {
-    const { espacio_id, fecha, hora_inicio, hora_fin, email } = req.body;
+    const { espacio_id, disciplina_id, fecha, hora_inicio, hora_fin, motivo } =
+      req.body;
 
-    // 🔴 VALIDACIÓN: evitar solapamiento
+    const emailUsuario = req.user.email;
+    const solicitanteId = req.user.id;
+
+    // Buscar deportista asociado al usuario logueado
+    const deportista = await pool.query(
+      `
+      SELECT id
+      FROM deportistas
+      WHERE email = $1
+      AND activo = true
+      `,
+      [emailUsuario],
+    );
+
+    if (deportista.rows.length === 0) {
+      return res.status(403).json({
+        error: "El usuario autenticado no está registrado como deportista",
+      });
+    }
+
+    const deportistaId = deportista.rows[0].id;
+
+    // Validar horario ocupado
     const existe = await pool.query(
       `
-      SELECT * FROM reservas
+      SELECT *
+      FROM reservas
       WHERE espacio_id = $1
       AND fecha = $2
-      AND estado = 'activa'
+      AND estado = 'confirmada'
       AND (
-        hora_inicio < $4 AND
-        hora_fin > $3
+        hora_inicio < $4
+        AND hora_fin > $3
       )
       `,
       [espacio_id, fecha, hora_inicio, hora_fin],
@@ -29,19 +53,48 @@ const crearReserva = async (req, res) => {
       });
     }
 
-    // ✅ Insertar reserva
+    // Crear reserva
     const nueva = await pool.query(
       `
-      INSERT INTO reservas (espacio_id, fecha, hora_inicio, hora_fin)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO reservas (
+        espacio_id,
+        solicitante_id,
+        deportista_id,
+        disciplina_id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        motivo,
+        estado
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        'confirmada'
+      )
       RETURNING *
       `,
-      [espacio_id, fecha, hora_inicio, hora_fin],
+      [
+        espacio_id,
+        solicitanteId,
+        deportistaId,
+        disciplina_id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        motivo,
+      ],
     );
 
     const reservaCreada = nueva.rows[0];
 
-    // 🔹 Obtener nombre del espacio
+    // Obtener nombre del espacio
     const espacio = await pool.query(
       "SELECT nombre FROM espacios WHERE id = $1",
       [reservaCreada.espacio_id],
@@ -50,16 +103,27 @@ const crearReserva = async (req, res) => {
     reservaCreada.espacio_nombre =
       espacio.rows[0]?.nombre || "Espacio Deportivo";
 
-    // 🔹 Generar PDF
+    // Generar PDF
     const archivoPDF = await generarPDFReserva(reservaCreada);
 
-    // 🔹 Ruta física PDF
+    await pool.query(
+      `
+      UPDATE reservas
+      SET comprobante_pdf = $1
+      WHERE id = $2
+      `,
+      [archivoPDF, reservaCreada.id],
+    );
+
+    reservaCreada.comprobante_pdf = archivoPDF;
+
+    // Ruta física PDF
     const rutaPDF = path.join(__dirname, "../pdfs", archivoPDF);
 
-    // 🔹 Enviar correo
+    // Enviar correo
     await transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: email,
+      to: req.user.email,
       subject: "Comprobante de Reserva - UCB Deportes",
 
       text:
@@ -83,57 +147,165 @@ const crearReserva = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al crear reserva" });
+    res.status(500).json({
+      error: "Error al crear reserva",
+    });
   }
 };
 
-// 🔹 Listar reservas
+// Listar reservas
 const listarReservas = async (req, res) => {
   try {
     const { fecha } = req.query;
 
     let result;
 
-    if (fecha) {
-      result = await pool.query(
-        "SELECT * FROM reservas WHERE fecha = $1 AND estado = 'activa'",
-        [fecha],
+    // ADMINISTRADOR → ve todas
+    if (req.user.rol === "administrador") {
+      if (fecha) {
+        result = await pool.query(
+          `
+          SELECT *
+          FROM reservas
+          WHERE fecha = $1
+          AND estado = 'confirmada'
+          `,
+          [fecha],
+        );
+      } else {
+        result = await pool.query(
+          `
+          SELECT *
+          FROM reservas
+          WHERE estado = 'confirmada'
+          `,
+        );
+      }
+    }
+
+    // ESTUDIANTE → solo sus reservas
+    else {
+      const deportista = await pool.query(
+        `
+        SELECT id
+        FROM deportistas
+        WHERE email = $1
+        `,
+        [req.user.email],
       );
-    } else {
-      result = await pool.query(
-        "SELECT * FROM reservas WHERE estado = 'activa'",
-      );
+
+      if (deportista.rows.length === 0) {
+        return res.status(403).json({
+          error: "No existe deportista asociado al usuario",
+        });
+      }
+
+      const deportistaId = deportista.rows[0].id;
+
+      if (fecha) {
+        result = await pool.query(
+          `
+          SELECT *
+          FROM reservas
+          WHERE deportista_id = $1
+          AND fecha = $2
+          AND estado = 'confirmada'
+          `,
+          [deportistaId, fecha],
+        );
+      } else {
+        result = await pool.query(
+          `
+          SELECT *
+          FROM reservas
+          WHERE deportista_id = $1
+          AND estado = 'confirmada'
+          `,
+          [deportistaId],
+        );
+      }
     }
 
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: "Error al listar reservas" });
+    console.error(error);
+    res.status(500).json({
+      error: "Error al listar reservas",
+    });
   }
 };
 
-// 🔹 Cancelar reserva
+// Cancelar reserva
 const cancelarReserva = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // ADMINISTRADOR
+    if (req.user.rol === "administrador") {
+      const result = await pool.query(
+        `
+        UPDATE reservas
+        SET estado = 'cancelada'
+        WHERE id = $1
+        RETURNING *
+        `,
+        [id],
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          error: "Reserva no encontrada",
+        });
+      }
+
+      return res.json({
+        mensaje: "Reserva cancelada",
+      });
+    }
+
+    // ESTUDIANTE
+    const deportista = await pool.query(
+      `
+      SELECT id
+      FROM deportistas
+      WHERE email = $1
+      `,
+      [req.user.email],
+    );
+
+    if (deportista.rows.length === 0) {
+      return res.status(403).json({
+        error: "No existe deportista asociado al usuario",
+      });
+    }
+
+    const deportistaId = deportista.rows[0].id;
 
     const result = await pool.query(
       `
       UPDATE reservas
       SET estado = 'cancelada'
       WHERE id = $1
+      AND deportista_id = $2
       RETURNING *
       `,
-      [id],
+      [id, deportistaId],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Reserva no encontrada" });
+      return res.status(403).json({
+        error: "No puede cancelar esta reserva",
+      });
     }
 
-    res.json({ mensaje: "Reserva cancelada" });
+    res.json({
+      mensaje: "Reserva cancelada",
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al cancelar reserva" });
+    res.status(500).json({
+      error: "Error al cancelar reserva",
+    });
   }
 };
 

@@ -9,15 +9,21 @@ const exportarReservasExcel = async (req, res) => {
     // 🔹 Obtener reservas
     const result = await pool.query(`
       SELECT
-        r.id,
-        e.nombre AS espacio,
-        r.fecha,
-        r.hora_inicio,
-        r.hora_fin,
-        r.estado
+          r.id,
+          d.nombre_completo AS deportista,
+          e.nombre AS espacio,
+          di.nombre AS disciplina,
+          r.fecha,
+          r.hora_inicio,
+          r.hora_fin,
+          r.estado
       FROM reservas r
-      JOIN espacios e
-      ON r.espacio_id = e.id
+      LEFT JOIN deportistas d
+          ON r.deportista_id = d.id
+      LEFT JOIN espacios e
+          ON r.espacio_id = e.id
+      LEFT JOIN disciplinas di
+          ON r.disciplina_id = di.id
       ORDER BY r.id ASC
     `);
 
@@ -42,15 +48,21 @@ const exportarReservasPDF = async (req, res) => {
     // 🔹 Obtener reservas
     const result = await pool.query(`
       SELECT
-        r.id,
-        e.nombre AS espacio,
-        r.fecha,
-        r.hora_inicio,
-        r.hora_fin,
-        r.estado
+          r.id,
+          d.nombre_completo AS deportista,
+          e.nombre AS espacio,
+          di.nombre AS disciplina,
+          r.fecha,
+          r.hora_inicio,
+          r.hora_fin,
+          r.estado
       FROM reservas r
-      JOIN espacios e
-      ON r.espacio_id = e.id
+      LEFT JOIN deportistas d
+          ON r.deportista_id = d.id
+      LEFT JOIN espacios e
+          ON r.espacio_id = e.id
+      LEFT JOIN disciplinas di
+          ON r.disciplina_id = di.id
       ORDER BY r.id ASC
     `);
 
@@ -58,10 +70,10 @@ const exportarReservasPDF = async (req, res) => {
 
     const columnas = [
       { header: "ID", key: "id" },
+      { header: "DEPORTE", key: "disciplina" },
+      { header: "DEPORTISTA", key: "deportista" },
       { header: "ESPACIO", key: "espacio" },
       { header: "FECHA", key: "fecha" },
-      { header: "INICIO", key: "hora_inicio" },
-      { header: "FIN", key: "hora_fin" },
     ];
 
     // 🔹 Generar PDF
@@ -83,20 +95,25 @@ const exportarReservasPDF = async (req, res) => {
   }
 };
 
-// 🔹 Exportar pagos Excel
+// Exportar pagos Excel
 const exportarPagosExcel = async (req, res) => {
   try {
-    // 🔹 Obtener pagos
+    // Obtener pagos
     const result = await pool.query(`
       SELECT
-        p.id,
-        d.nombre_completo AS deportista,
-        p.monto,
-        p.fecha_pago,
-        p.estado
+          p.id,
+          d.nombre_completo AS deportista,
+          c.nombre AS concepto,
+          p.monto,
+          p.mes,
+          p.anio,
+          p.fecha_pago,
+          p.estado
       FROM pagos p
       JOIN deportistas d
-      ON p.deportista_id = d.id
+          ON p.deportista_id = d.id
+      JOIN conceptos_pago c
+          ON p.concepto_id = c.id
       ORDER BY p.id ASC
     `);
 
@@ -120,14 +137,19 @@ const exportarPagosPDF = async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        p.id,
-        d.nombre_completo AS deportista,
-        p.monto,
-        p.fecha_pago,
-        p.estado
+          p.id,
+          d.nombre_completo AS deportista,
+          c.nombre AS concepto,
+          p.monto,
+          p.mes,
+          p.anio,
+          p.fecha_pago,
+          p.estado
       FROM pagos p
       JOIN deportistas d
-      ON p.deportista_id = d.id
+          ON p.deportista_id = d.id
+      JOIN conceptos_pago c
+          ON p.concepto_id = c.id
       ORDER BY p.id ASC
     `);
 
@@ -136,9 +158,9 @@ const exportarPagosPDF = async (req, res) => {
     const columnas = [
       { header: "ID", key: "id" },
       { header: "DEPORTISTA", key: "deportista" },
+      { header: "CONCEPTO", key: "concepto" },
       { header: "MONTO", key: "monto" },
       { header: "FECHA", key: "fecha_pago" },
-      { header: "ESTADO", key: "estado" },
     ];
 
     const rutaPDF = await generarPDFReporte(
@@ -166,6 +188,7 @@ const exportarDeportistasExcel = async (req, res) => {
       SELECT
         id,
         nombre_completo,
+        tipo,
         ci,
         carrera
       FROM deportistas
@@ -197,6 +220,7 @@ const exportarDeportistasPDF = async (req, res) => {
       SELECT
         d.id,
         d.nombre_completo AS nombre,
+        d.tipo,
         d.ci,
         d.carrera
       FROM deportistas d
@@ -208,6 +232,7 @@ const exportarDeportistasPDF = async (req, res) => {
     const columnas = [
       { header: "ID", key: "id" },
       { header: "NOMBRE", key: "nombre" },
+      { header: "TIPO", key: "tipo" },
       { header: "CI", key: "ci" },
       { header: "CARRERA", key: "carrera" },
     ];

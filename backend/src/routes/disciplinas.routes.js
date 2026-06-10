@@ -6,50 +6,75 @@ const {
   listarDisciplinas,
   editarDisciplina,
   eliminarDisciplina,
+  reactivarDisciplina,
 } = require("../controllers/disciplinas.controller");
 
 const { verificarToken } = require("../middlewares/auth.middleware");
 const { verificarRol } = require("../middlewares/role.middleware");
 
-// 🔹 Listar disciplinas
+// Listar disciplinas
 /**
  * @swagger
  * /disciplinas:
  *   get:
- *     summary: Listar disciplinas
+ *     summary: Listar disciplinas con filtros opcionales
  *     tags: [Disciplinas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: activo
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar disciplinas activas o inactivas
  *     responses:
  *       200:
  *         description: Lista de disciplinas
  */
-router.get("/", listarDisciplinas);
+router.get(
+  "/",
+  verificarToken,
+  verificarRol("administrador"),
+  listarDisciplinas,
+);
 
-// 🔹 Crear disciplina
+// Crear disciplina
 /**
  * @swagger
  * /disciplinas:
  *   post:
  *     summary: Crear disciplina
  *     tags: [Disciplinas]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           example:
  *             nombre: "Fútbol"
+ *             descripcion: "Disciplina deportiva de fútbol"
+ *             orden: 1
  *     responses:
  *       200:
  *         description: Disciplina creada
  */
-router.post("/", crearDisciplina);
+router.post(
+  "/",
+  verificarToken,
+  verificarRol("administrador"),
+  crearDisciplina,
+);
 
-// 🔹 Editar disciplina
+// Editar disciplina
 /**
  * @swagger
  * /disciplinas/{id}:
  *   put:
  *     summary: Editar disciplina
  *     tags: [Disciplinas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -62,19 +87,28 @@ router.post("/", crearDisciplina);
  *         application/json:
  *           example:
  *             nombre: "Fútbol 11"
+ *             descripcion: "Disciplina actualizada"
+ *             orden: 2
  *     responses:
  *       200:
  *         description: Disciplina actualizada
  */
-router.put("/:id", editarDisciplina);
+router.put(
+  "/:id",
+  verificarToken,
+  verificarRol("administrador"),
+  editarDisciplina,
+);
 
-// 🔹 Eliminar disciplina
+// Eliminar disciplina
 /**
  * @swagger
  * /disciplinas/{id}:
  *   delete:
- *     summary: Eliminar disciplina
+ *     summary: Desactivar disciplina
  *     tags: [Disciplinas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -83,8 +117,39 @@ router.put("/:id", editarDisciplina);
  *           type: integer
  *     responses:
  *       200:
- *         description: Disciplina eliminada
+ *         description: Disciplina desactivada lógicamente
  */
-router.delete("/:id", eliminarDisciplina);
+router.delete(
+  "/:id",
+  verificarToken,
+  verificarRol("administrador"),
+  eliminarDisciplina,
+);
+
+// Reactivar Disciplina
+/**
+ * @swagger
+ * /disciplinas/{id}/reactivar:
+ *   patch:
+ *     summary: Reactivar disciplina
+ *     tags: [Disciplinas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Disciplina reactivada
+ */
+router.patch(
+  "/:id/reactivar",
+  verificarToken,
+  verificarRol("administrador"),
+  reactivarDisciplina,
+);
 
 module.exports = router;

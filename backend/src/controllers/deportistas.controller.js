@@ -1,53 +1,83 @@
 const pool = require("../config/db");
 
-// 🔹 Crear deportista
+// Crear deportista
+
 const crearDeportista = async (req, res) => {
   try {
-    const { usuario_id, nombre_completo, ci, carrera } = req.body;
+    const {
+      tipo,
+      nombre_completo,
+      ci,
+      fecha_nacimiento,
+      genero,
+      telefono,
+      email,
+      direccion,
+      carrera,
+      semestre,
+      talla_camiseta,
+    } = req.body;
 
-    // 🔴 VALIDAR CAMPOS OBLIGATORIOS
-    if (!usuario_id || !nombre_completo || !ci) {
+    if (!tipo || !nombre_completo || !ci) {
       return res.status(400).json({
         error: "Faltan datos obligatorios",
       });
     }
 
-    // 🔴 1. Verificar que el usuario exista
-    const usuario = await pool.query("SELECT * FROM usuarios WHERE id = $1", [
-      usuario_id,
-    ]);
+    const tiposPermitidos = ["estudiante_ucb", "externo"];
 
-    if (usuario.rows.length === 0) {
-      return res.status(404).json({ error: "Usuario no existe" });
-    }
-
-    // 🔴 2. Verificar que sea jugador (rol_id = 4)
-    if (usuario.rows[0].rol_id !== 4) {
+    if (!tiposPermitidos.includes(tipo)) {
       return res.status(400).json({
-        error: "El usuario no es jugador",
+        error: "Tipo de deportista inválido",
       });
     }
 
-    // 🔴 3. Verificar que no tenga ya un deportista
-    const existe = await pool.query(
-      "SELECT * FROM deportistas WHERE usuario_id = $1",
-      [usuario_id],
-    );
-
-    if (existe.rows.length > 0) {
-      return res.status(400).json({
-        error: "Este usuario ya es deportista",
-      });
+    if (tipo === "estudiante_ucb") {
+      if (!carrera || !semestre) {
+        return res.status(400).json({
+          error: "Para estudiantes UCB debe registrar carrera y semestre",
+        });
+      }
     }
 
-    // 🔴 4. Insertar
+    // Insertar
     const result = await pool.query(
-      `
-      INSERT INTO deportistas (usuario_id, nombre_completo, ci, carrera)
-      VALUES ($1, $2, $3, $4)
+      `INSERT INTO deportistas (
+        tipo,
+        nombre_completo,
+        ci,
+        fecha_nacimiento,
+        genero,
+        telefono,
+        email,
+        direccion,
+        carrera,
+        semestre,
+        matricula_activa,
+        ultima_validacion_matricula,
+        talla_camiseta
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+      )
       RETURNING *
       `,
-      [usuario_id, nombre_completo, ci, carrera],
+
+      [
+        tipo,
+        nombre_completo,
+        ci,
+        fecha_nacimiento,
+        genero,
+        telefono,
+        email,
+        direccion,
+        carrera,
+        semestre,
+        tipo === "estudiante_ucb",
+        tipo === "estudiante_ucb" ? new Date() : null,
+        talla_camiseta,
+      ],
     );
 
     res.json(result.rows[0]);
@@ -64,28 +94,70 @@ const crearDeportista = async (req, res) => {
   }
 };
 
-// 🔹 Listar deportistas
+// Listar deportistas
+
 const listarDeportistas = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT d.*, u.email
-      FROM deportistas d
-      JOIN usuarios u ON d.usuario_id = u.id
-    `);
+    const { activo, tipo } = req.query;
+
+    let query = `
+      SELECT *
+      FROM deportistas
+    `;
+
+    const condiciones = [];
+    const params = [];
+
+    if (activo === "true") {
+      condiciones.push("activo = TRUE");
+    }
+
+    if (activo === "false") {
+      condiciones.push("activo = FALSE");
+    }
+
+    if (tipo) {
+      params.push(tipo);
+      condiciones.push(`tipo = $${params.length}`);
+    }
+
+    if (condiciones.length > 0) {
+      query += ` WHERE ` + condiciones.join(" AND ");
+    }
+
+    query += ` ORDER BY id ASC`;
+
+    const result = await pool.query(query, params);
 
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: "Error al listar deportistas" });
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al listar deportistas",
+    });
   }
 };
 
-// 🔹 Editar deportista
+// Editar deportista
+
 const editarDeportista = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre_completo, ci, carrera } = req.body;
+    const {
+      nombre_completo,
+      ci,
+      fecha_nacimiento,
+      genero,
+      telefono,
+      email,
+      direccion,
+      carrera,
+      semestre,
+      talla_camiseta,
+    } = req.body;
 
-    // 🔴 VALIDAR DATOS
+    // VALIDAR DATOS
     if (!nombre_completo || !ci) {
       return res.status(400).json({
         error: "Datos incompletos",
@@ -95,11 +167,33 @@ const editarDeportista = async (req, res) => {
     const result = await pool.query(
       `
       UPDATE deportistas
-      SET nombre_completo = $1, ci = $2, carrera = $3
-      WHERE id = $4
+      SET
+        nombre_completo = $1,
+        ci = $2,
+        fecha_nacimiento = $3,
+        genero = $4,
+        telefono = $5,
+        email = $6,
+        direccion = $7,
+        carrera = $8,
+        semestre = $9,
+        talla_camiseta = $10
+      WHERE id = $11
       RETURNING *
       `,
-      [nombre_completo, ci, carrera, id],
+      [
+        nombre_completo,
+        ci,
+        fecha_nacimiento,
+        genero,
+        telefono,
+        email,
+        direccion,
+        carrera,
+        semestre,
+        talla_camiseta,
+        id,
+      ],
     );
 
     if (result.rows.length === 0) {
@@ -120,13 +214,19 @@ const editarDeportista = async (req, res) => {
   }
 };
 
-// 🔹 Eliminar deportista
+// Eliminar deportista
+
 const eliminarDeportista = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      "DELETE FROM deportistas WHERE id = $1 RETURNING *",
+      `
+      UPDATE deportistas
+      SET activo = FALSE
+      WHERE id = $1
+      RETURNING *
+      `,
       [id],
     );
 
@@ -134,9 +234,119 @@ const eliminarDeportista = async (req, res) => {
       return res.status(404).json({ error: "Deportista no encontrado" });
     }
 
-    res.json({ mensaje: "Deportista eliminado" });
+    res.json({
+      mensaje: "Deportista desactivado correctamente",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Error al eliminar deportista" });
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al desactivar deportista",
+    });
+  }
+};
+
+// Reactivar Deportista
+
+const reactivarDeportista = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE deportistas
+      SET activo = TRUE
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Deportista no encontrado",
+      });
+    }
+
+    res.json({
+      mensaje: "Deportista reactivado correctamente",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al reactivar deportista",
+    });
+  }
+};
+
+// Reactivar Matrícula
+
+const reactivarMatricula = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE deportistas
+      SET
+        matricula_activa = TRUE,
+        ultima_validacion_matricula = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Deportista no encontrado",
+      });
+    }
+
+    res.json({
+      mensaje: "Matrícula reactivada correctamente",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al reactivar matrícula",
+    });
+  }
+};
+
+// Desactivar Matrícula
+
+const desactivarMatricula = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE deportistas
+      SET matricula_activa = FALSE
+      WHERE id = $1
+      RETURNING *
+      `,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Deportista no encontrado",
+      });
+    }
+
+    res.json({
+      mensaje: "Matrícula desactivada correctamente",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Error al desactivar matrícula",
+    });
   }
 };
 
@@ -145,4 +355,7 @@ module.exports = {
   listarDeportistas,
   editarDeportista,
   eliminarDeportista,
+  reactivarDeportista,
+  reactivarMatricula,
+  desactivarMatricula,
 };
