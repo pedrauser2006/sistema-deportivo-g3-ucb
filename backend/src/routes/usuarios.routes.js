@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../config/db");
+const { listarUsuarios } = require("../controllers/usuarios.controller");
 
 const { verificarToken } = require("../middlewares/auth.middleware");
 const { verificarRol } = require("../middlewares/role.middleware");
@@ -21,26 +21,6 @@ const { verificarRol } = require("../middlewares/role.middleware");
  *       403:
  *         description: Solo administradores
  */
-router.get(
-  "/",
-  verificarToken,
-  verificarRol("administrador"),
-  async (req, res) => {
-    const result = await pool.query(`
-      SELECT
-        u.id,
-        u.nombre_completo,
-        u.email,
-        r.nombre AS rol,
-        u.activo
-      FROM usuarios u
-      JOIN roles r
-        ON u.rol_id = r.id
-      ORDER BY u.id
-    `);
-
-    res.json(result.rows);
-  },
-);
+router.get("/", verificarToken, verificarRol("administrador"), listarUsuarios);
 
 module.exports = router;

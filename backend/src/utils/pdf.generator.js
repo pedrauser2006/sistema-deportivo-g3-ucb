@@ -17,11 +17,11 @@ const generarPDFReserva = (reserva) => {
 
       doc.pipe(stream);
 
-      // 🔹 COLORES
+      // COLORES
       const azul = "#003b70";
       const naranja = "#f39c12";
 
-      // 🔹 HEADER
+      // HEADER
       doc.rect(0, 0, doc.page.width, 80).fill(azul);
 
       doc
@@ -31,7 +31,7 @@ const generarPDFReserva = (reserva) => {
           align: "center",
         });
 
-      // 🔹 SUBTÍTULO
+      // SUBTÍTULO
       doc
         .moveDown(3)
         .fillColor("black")
@@ -42,14 +42,14 @@ const generarPDFReserva = (reserva) => {
 
       doc.moveDown(2);
 
-      // 🔹 CAJA INFORMACIÓN
+      // CAJA INFORMACIÓN
       doc
         .roundedRect(70, 180, 450, 180, 10)
         .lineWidth(2)
         .strokeColor(naranja)
         .stroke();
 
-      // 🔹 DATOS
+      // DATOS
       doc.fontSize(13).fillColor("black");
 
       let y = 210;
@@ -72,7 +72,7 @@ const generarPDFReserva = (reserva) => {
 
       doc.text(`Hora Fin: ${reserva.hora_fin}`, 100, y);
 
-      // 🔹 FOOTER
+      // FOOTER
       doc
         .fontSize(11)
         .fillColor("gray")
@@ -202,7 +202,7 @@ const generarPDFPago = (pago) => {
   });
 };
 
-// 🔹 Generador PDF Reportes
+// Generador PDF Reportes
 const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
   return new Promise((resolve, reject) => {
     try {
@@ -216,10 +216,10 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
 
       doc.pipe(stream);
 
-      // 🔹 Colores
+      // Colores
       const azul = "#003b70";
 
-      // 🔹 Header
+      // Header
       doc.rect(0, 0, doc.page.width, 70).fill(azul);
 
       doc
@@ -229,32 +229,32 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
           align: "center",
         });
 
-      // 🔹 Título
+      // Título
       doc.moveDown(3).fillColor("black").fontSize(18).text(titulo, {
         align: "center",
       });
 
       doc.moveDown(2);
 
-      // 🔹 Tabla
+      // Tabla
       let y = 140;
 
-      // 🔹 Posiciones columnas
+      // Posiciones columnas
       const posiciones = [50, 140, 260, 360, 450];
 
-      // 🔹 Header tabla
+      // Header tabla
       doc.rect(40, y, 520, 25).fill("#003b70");
 
       doc.fontSize(11).fillColor("white");
 
-      // 🔹 Dibujar headers
+      // Dibujar headers
       columnas.forEach((col, index) => {
         doc.text(col.header, posiciones[index], y + 7);
       });
 
       y += 35;
 
-      // 🔹 Filas
+      // Filas
       datos.forEach((item) => {
         doc
           .strokeColor("#d1d5db")
@@ -268,7 +268,7 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
         columnas.forEach((col, index) => {
           let valor = item[col.key];
 
-          // 🔹 Fechas
+          // Fechas
           if (col.key.includes("fecha") && valor) {
             valor = new Date(valor).toLocaleDateString();
           }
@@ -280,7 +280,7 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
 
         y += 28;
 
-        // 🔹 Nueva página
+        // Nueva página
         if (y > 720) {
           doc.addPage();
 
@@ -288,7 +288,7 @@ const generarPDFReporte = (titulo, columnas, datos, nombreArchivo) => {
         }
       });
 
-      /*// 🔹 Footer dinámico
+      /*// Footer dinámico
       const footerY = doc.page.height - 40;
 
       doc

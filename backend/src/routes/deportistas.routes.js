@@ -1,5 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const {
+  validarCrearDeportista,
+} = require("../validators/deportista.validator");
+
+const { validarCampos } = require("../middlewares/validation.middleware");
 
 const {
   crearDeportista,
@@ -83,6 +88,8 @@ router.post(
   "/",
   verificarToken,
   verificarRol("administrador"),
+  validarCrearDeportista,
+  validarCampos,
   crearDeportista,
 );
 

@@ -1,20 +1,20 @@
 const XLSX = require("xlsx");
 const path = require("path");
 
-// 🔹 Generador genérico Excel
+// Generador genérico Excel
 const generarExcel = (datos, nombreArchivo, nombreHoja) => {
-  // 🔹 Crear hoja
+  // Crear hoja
   const worksheet = XLSX.utils.json_to_sheet(datos);
 
-  // 🔹 Crear libro
+  // Crear libro
   const workbook = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
 
-  // 🔹 Ruta archivo
+  // Ruta archivo
   const rutaArchivo = path.join(__dirname, "../excels", nombreArchivo);
 
-  // 🔹 Guardar
+  // Guardar
   XLSX.writeFile(workbook, rutaArchivo);
 
   return rutaArchivo;

@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-
 const { crearPago, listarPagos } = require("../controllers/pagos.controller");
+const { validarCrearPago } = require("../validators/pago.validator");
+
+const { validarCampos } = require("../middlewares/validation.middleware");
 
 const { verificarToken } = require("../middlewares/auth.middleware");
 const { verificarRol } = require("../middlewares/role.middleware");
@@ -64,6 +66,12 @@ router.get(
  *       403:
  *         description: Usuario no autorizado o no registrado como deportista
  */
-router.post("/", verificarToken, verificarRol("estudiante"), crearPago);
-
+router.post(
+  "/",
+  verificarToken,
+  verificarRol("estudiante"),
+  validarCrearPago,
+  validarCampos,
+  crearPago,
+);
 module.exports = router;

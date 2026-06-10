@@ -1,5 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const {
+  validarCrearDisciplina,
+} = require("../validators/disciplina.validator");
+
+const { validarCampos } = require("../middlewares/validation.middleware");
 
 const {
   crearDisciplina,
@@ -63,6 +68,8 @@ router.post(
   "/",
   verificarToken,
   verificarRol("administrador"),
+  validarCrearDisciplina,
+  validarCampos,
   crearDisciplina,
 );
 

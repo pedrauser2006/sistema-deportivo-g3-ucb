@@ -1,32 +1,25 @@
-const pool = require("../config/db");
+const disciplinaService = require("../services/disciplina.service");
 
 // Crear disciplina
 const crearDisciplina = async (req, res) => {
   try {
     const { nombre, descripcion, orden } = req.body;
 
-    if (!nombre) {
-      return res.status(400).json({
-        error: "El nombre es obligatorio",
-      });
-    }
-
-    const result = await pool.query(
-      `
-      INSERT INTO disciplinas (
-        nombre,
-        descripcion,
-        orden
-      )
-      VALUES ($1, $2, $3)
-      RETURNING *
-      `,
-      [nombre, descripcion || null, orden || 0],
+    const disciplina = await disciplinaService.crearDisciplina(
+      nombre,
+      descripcion,
+      orden,
     );
 
-    res.json(result.rows[0]);
+    res.json(disciplina);
   } catch (error) {
     console.error(error);
+
+    if (error.message === "El nombre es obligatorio") {
+      return res.status(400).json({
+        error: error.message,
+      });
+    }
 
     if (error.code === "23505") {
       return res.status(400).json({
@@ -34,7 +27,9 @@ const crearDisciplina = async (req, res) => {
       });
     }
 
-    res.status(500).json({ error: "Error al crear disciplina" });
+    res.status(500).json({
+      error: "Error al crear disciplina",
+    });
   }
 };
 
@@ -43,32 +38,9 @@ const listarDisciplinas = async (req, res) => {
   try {
     const { activo } = req.query;
 
-    let query = `
-      SELECT *
-      FROM disciplinas
-    `;
+    const disciplinas = await disciplinaService.listarDisciplinas(activo);
 
-    const condiciones = [];
-
-    if (activo === "true") {
-      condiciones.push("activo = TRUE");
-    }
-
-    if (activo === "false") {
-      condiciones.push("activo = FALSE");
-    }
-
-    if (condiciones.length > 0) {
-      query += ` WHERE ` + condiciones.join(" AND ");
-    }
-
-    query += `
-      ORDER BY orden ASC, nombre ASC
-    `;
-
-    const result = await pool.query(query);
-
-    res.json(result.rows);
+    res.json(disciplinas);
   } catch (error) {
     console.error(error);
 
@@ -84,32 +56,28 @@ const editarDisciplina = async (req, res) => {
     const { id } = req.params;
     const { nombre, descripcion, orden } = req.body;
 
-    if (!nombre) {
+    const disciplina = await disciplinaService.editarDisciplina(
+      id,
+      nombre,
+      descripcion,
+      orden,
+    );
+
+    res.json(disciplina);
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "El nombre es obligatorio") {
       return res.status(400).json({
-        error: "El nombre es obligatorio",
+        error: error.message,
       });
     }
 
-    const result = await pool.query(
-      `
-      UPDATE disciplinas
-      SET
-        nombre = $1,
-        descripcion = $2,
-        orden = $3
-      WHERE id = $4
-      RETURNING *
-      `,
-      [nombre, descripcion || null, orden || 0, id],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Disciplina no encontrada" });
+    if (error.message === "Disciplina no encontrada") {
+      return res.status(404).json({
+        error: error.message,
+      });
     }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
 
     if (error.code === "23505") {
       return res.status(400).json({
@@ -117,7 +85,9 @@ const editarDisciplina = async (req, res) => {
       });
     }
 
-    res.status(500).json({ error: "Error al editar disciplina" });
+    res.status(500).json({
+      error: "Error al editar disciplina",
+    });
   }
 };
 
@@ -126,19 +96,7 @@ const eliminarDisciplina = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      `
-      UPDATE disciplinas
-      SET activo = FALSE
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Disciplina no encontrada" });
-    }
+    await disciplinaService.eliminarDisciplina(id);
 
     res.json({
       mensaje: "Disciplina desactivada correctamente",
@@ -146,38 +104,36 @@ const eliminarDisciplina = async (req, res) => {
   } catch (error) {
     console.error(error);
 
+    if (error.message === "Disciplina no encontrada") {
+      return res.status(404).json({
+        error: error.message,
+      });
+    }
+
     res.status(500).json({
       error: "Error al desactivar disciplina",
     });
   }
 };
 
-// Reactivar Disciplina
+// Reactivar disciplina
 const reactivarDisciplina = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
-      `
-      UPDATE disciplinas
-      SET activo = TRUE
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        error: "Disciplina no encontrada",
-      });
-    }
+    await disciplinaService.reactivarDisciplina(id);
 
     res.json({
       mensaje: "Disciplina reactivada correctamente",
     });
   } catch (error) {
     console.error(error);
+
+    if (error.message === "Disciplina no encontrada") {
+      return res.status(404).json({
+        error: error.message,
+      });
+    }
 
     res.status(500).json({
       error: "Error al reactivar disciplina",

@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const { validarCrearReserva } = require("../validators/reserva.validator");
+
+const { validarCampos } = require("../middlewares/validation.middleware");
 
 const {
   crearReserva,
@@ -70,7 +73,14 @@ router.get(
  *         description: El usuario no está registrado como deportista o no tiene permisos
  */
 
-router.post("/", verificarToken, verificarRol("estudiante"), crearReserva);
+router.post(
+  "/",
+  verificarToken,
+  verificarRol("estudiante"),
+  validarCrearReserva,
+  validarCampos,
+  crearReserva,
+);
 
 // Cancelar reserva
 /**
